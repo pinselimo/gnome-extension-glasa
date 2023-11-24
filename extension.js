@@ -1,25 +1,27 @@
 'use strict';
 
-const Main = imports.ui.main;
-const Panel = imports.ui.panel;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const { Clutter, GLib, Gio, St } = imports.gi;
+import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
+import Gio from 'gi://Gio';
+import St from 'gi://St';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as Panel from 'resource:///org/gnome/shell/ui/panel.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-
-class Extension {
-  constructor() {
+export default class GlasaExtension extends Extension {
+  constructor(metadata) {
+    super(metadata);
     this._indicator = null;
   }
 
   enable() {
-    // log(`enabling ${Me.metadata.name}`);
+    // log(`enabling ${this.metadata.name}`);
 
     // Retrieve the extension's settings and make changing them update the
     // extension indicator.
-    this._settings = ExtensionUtils.getSettings();
+    this._settings = Extension.lookupByUUID(this.uuid).getSettings();
     this._settings_handler = null;
     this._settings_handler = this._settings.connect('changed', () => {
       this._position_changed();
@@ -42,7 +44,7 @@ class Extension {
     });
 
     // Set up the indicator itself.
-    let indicatorName = `${Me.metadata.name} Indicator`;
+    let indicatorName = `${this.metadata.name} Indicator`;
     this._indicator = new PanelMenu.Button(0.0, indicatorName, false);
 
     // The icon should be correctly styled and aligned.
@@ -90,7 +92,7 @@ class Extension {
     Gio.DBus.session.call(
       'org.gnome.Shell.Extensions', '/org/gnome/Shell/Extensions',
       'org.gnome.Shell.Extensions', 'OpenExtensionPrefs',
-      new GLib.Variant('(ssa{sv})', [Me.uuid, '', {}]), null,
+      new GLib.Variant('(ssa{sv})', [this.uuid, '', {}]), null,
       Gio.DBusCallFlags.NONE, -1, null);
   }
 
@@ -165,7 +167,7 @@ class Extension {
   }
 
   disable() {
-    // log(`disabling ${Me.metadata.name}`);
+    // log(`disabling ${this.metadata.name}`);
     if (this._settings_handler) {
       this._settings.disconnect(this._settings_handler);
       this._settings_handler = null;
@@ -191,6 +193,6 @@ class Extension {
 }
 
 function init() {
-  // log(`initializing ${Me.metadata.name}`);
+  // log(`initializing ${this.metadata.name}`);
   return new Extension();
 }
