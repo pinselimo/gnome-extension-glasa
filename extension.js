@@ -15,6 +15,7 @@ export default class GlasaExtension extends Extension {
   constructor(metadata) {
     super(metadata);
     this._indicator = null;
+    this._blinkCounter = 0;
   }
 
   enable() {
@@ -145,12 +146,30 @@ export default class GlasaExtension extends Extension {
     cr.setLineWidth(EYE_LINE_WIDTH);
     cr.save();
 
-    // Draw the eye.
+    // Draw the eye outline.
     cr.translate(center_x, center_y);
     cr.arc(0, 0, eye_radius, 0, 2 * Math.PI);
     cr.stroke();
-    // Draw the eyebrow.
+    // Draw eyelid + brow
     let offset = position > 0 ? 0.5 : 0.0;
+    let timer = this._blinkCounter;
+    if (timer >= 0) {
+      let offset = position > 0 ? 1.5 : -1.0;
+      if (timer < 1 || timer > 8) {
+        cr.arc(0, 0, eye_radius, 1.2 * Math.PI, 1.8 * Math.PI);
+        cr.closePath();
+      } else if (timer < 2 || timer > 7) {
+        cr.arc(0, 0, eye_radius, 1 * Math.PI, 0);
+        cr.closePath();
+      } else if (timer < 3 || timer > 6) {
+        cr.arc(0, 0, eye_radius, 0.8 * Math.PI, 0.2 * Math.PI);
+        cr.closePath();
+      } else {
+        cr.arc(0, 0, eye_radius, 0, 2 * Math.PI);
+      }
+      cr.fill();
+    }
+    // Draw the eyebrow.
     cr.arc(0, 0, eyebrow_radius, (5 + offset) * Math.PI / 4,
       (6.5 + offset) * Math.PI / 4);
     cr.stroke();
@@ -161,6 +180,11 @@ export default class GlasaExtension extends Extension {
     cr.arc(0, 0, eye_radius * IRIS_SIZE, 0, 2 * Math.PI);
     cr.fill();
     cr.restore();
+    if (this._blinkCounter > 9) {
+      this._blinkCounter = Math.floor(Math.random() * -500);
+    } else {
+      this._blinkCounter += 1;
+    }
   }
 
   _draw_eyes() {
